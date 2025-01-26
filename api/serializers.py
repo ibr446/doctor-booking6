@@ -51,4 +51,3 @@ class NewsSerializer(serializers.ModelSerializer):
         return None
 
 
-s
