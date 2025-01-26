@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 
 from django.conf.global_settings import AUTH_USER_MODEL
@@ -40,8 +41,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'api',
     'rest_framework',
+    'django_filters',
+    'drf_spectacular',
+
+
+    'api',
+
 ]
 
 MIDDLEWARE = [
@@ -96,20 +102,36 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
 
-# AUTH_PASSWORD_VALIDATORS = [
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-#     },
-#     {
-#         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-#     },
-# ]
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+            'rest_framework.throttling.AnonRateThrottle',
+            'rest_framework.throttling.UserRateThrottle',
+        ],
+        'DEFAULT_THROTTLE_RATES': {
+            'anon': '5/minute',   # Faqatgina anonim foydalanuvchilar uchun 1 daqiqada 5 so'rov
+            'user': '10/minute',  # Tizimga kirgan foydalanuvchilar uchun 1 daqiqada 10 so'rov
+    },
+}
+
 
 
 # Internationalization
@@ -127,10 +149,26 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR / 'static')
+
+BASE_URL = "http://localhost:8000"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Medic Api',
+    'DESCRIPTION': 'Medic Api',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': True,
+}
 
