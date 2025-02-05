@@ -4,11 +4,23 @@ from django.conf import settings
 from root.settings import BASE_URL
 
 
+class UserUpdateSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField()
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "avatar"]
+
+
+
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'email', 'password', 'role')
+        fields = ('username', 'email', 'password', 'roles')
 
+
+class LoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
 
 
 
@@ -26,13 +38,24 @@ class UserSerializer(serializers.ModelSerializer):
         return None
 
 
+
 class DoctorSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
     class Meta:
         model = Doctor
-        fields = ['user' ,'specialization', 'experience', 'location', 'clinic_name', 'consultation_fee',
+        fields = ['user', 'id', 'specialization', 'experience', 'location', 'clinic_name', 'consultation_fee',
                   'is_consultation_free', 'available_today', 'rating_percentage', 'patient_stories']
+
+
+
+
+class DoctorUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Doctor
+        fields = ['id', 'specialization', 'experience', 'location', 'clinic_name',
+                  'consultation_fee', 'is_consultation_free', 'available_today',
+                  'rating_percentage', 'patient_stories', ]
 
 
 

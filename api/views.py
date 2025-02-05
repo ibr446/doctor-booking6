@@ -3,14 +3,20 @@ from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Doctor, News
+from django.shortcuts import get_object_or_404
+from .models import Doctor, News, User
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.throttling import AnonRateThrottle
 from django.contrib.auth.hashers import check_password, make_password
-from .serializers import DoctorSerializer, NewsSerializer, RegisterSerializer
+from .serializers import DoctorSerializer, NewsSerializer, RegisterSerializer, DoctorUpdateSerializer, LoginSerializer, UserUpdateSerializer
 from rest_framework import filters, generics
 from rest_framework.filters import SearchFilter
+from drf_spectacular.utils import extend_schema, OpenApiParameter
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+
+
 
 
 
@@ -33,10 +39,59 @@ class RegisterApiView(APIView):
 
 
 
+class LoginApiView(APIView):
+    @extend_schema(
+        summary="User Login",
+        description="Login using email and password to obtain JWT tokens.",
+        request=LoginSerializer,  # Specify request body fields
+        responses={
+            200: OpenApiParameter(name="Tokens", description="JWT access and refresh tokens"),
+            400: OpenApiParameter(name="Errors", description="Invalid credentials or validation errors"),
+        },
+        tags=["User Authentication"]
+    )
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data.get('email')
+            password = serializer.validated_data.get('password')
+
+            user = User.objects.get(email=email)
+            if user.check_password(password):
+                if not user.is_active:
+                    return Response({"detail": "User account is inactive."}, status=status.HTTP_400_BAD_REQUEST)
+
+                refresh = RefreshToken.for_user(user)
+                access_token = str(refresh.access_token)
+
+                return Response({
+                    "refresh": str(refresh),
+                    "access": access_token,
+                }, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "Invalid password or email"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class UserUpdateView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+
+    @extend_schema(
+        request=UserUpdateSerializer,
+        responses={200: "User updated successfully"}
+    )
+    def put(self, request, pk):
+        user = get_object_or_404(User, pk=pk)  # Gracefully handle non-existing user
+        serializer = UserUpdateSerializer(instance=user, data=request.data, partial=False)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"message": "User updated successfully"}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DoctorApiView(APIView):
-    # throttle_classes = (AnonRateThrottle,)
+    throttle_classes = [AnonRateThrottle]
 
     def get(self, requests, pk=None):
         if pk:
@@ -50,6 +105,31 @@ class DoctorApiView(APIView):
             doctor = Doctor.objects.all()
             serializer = DoctorSerializer(doctor, many=True)
             return Response(serializer.data)
+
+
+
+
+class DoctorUpdateApiView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    @extend_schema(
+        summary="Doctor Update",
+        description="Doctor update data",
+        request=DoctorUpdateSerializer,  # Specify request body fields
+        responses={
+            200: OpenApiParameter(name="Update", description="Doctor update data"),
+            400: OpenApiParameter(name="Errors", description="Invalid credentials or validation errors"),
+        },
+        tags=["Doctor Update"]
+    )
+    def put(self, request, pk):
+        doctor = get_object_or_404(Doctor, pk=pk)
+        serializer = DoctorUpdateSerializer(doctor, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 

@@ -9,12 +9,12 @@ from django.db import models
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-    role = [
+    role = (
         ('user', 'User'),
         ('admin', 'Admin'),
         ('doctor', 'Doctor'),
         ('manager', 'Manager'),
-    ]
+    )
     email = models.EmailField(_('email address'), unique=True)
     username = models.CharField(_("username"), max_length=150, unique=True, )
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
@@ -23,7 +23,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(_('active'), default=True)
     is_staff = models.BooleanField(_('staff'), default=True)
     avatar = models.ImageField(_('avatar'), upload_to='avatars')
-    roles = models.CharField(_('role'), max_length=30, default='user', choices=role)
+    roles = models.CharField(max_length=30, default='user', choices=role)
 
     objects = UserManager()
 
