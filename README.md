@@ -15,7 +15,6 @@ Doctor Booking System is a web-based platform designed to facilitate doctor appo
 ## Technologies Used
 
 - **Backend:** Django (Python)
-- **Frontend:** HTML, CSS, JavaScript
 - **Database:** PostgreSQL
 - **Authentication:** Django Authentication System
 - **Styling:** Bootstrap
