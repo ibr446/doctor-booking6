@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Doctor, User, News
+from .models import Doctor, User, News, Date
 from django.conf import settings
 from root.settings import BASE_URL
 
@@ -74,3 +74,17 @@ class NewsSerializer(serializers.ModelSerializer):
         return None
 
 
+class DoctorDateSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Date
+        fields = ['id', 'user', 'doctor', 'date', 'time', 'status']
+
+
+class BookingSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Date
+        fields = ['id', 'user', 'doctor', 'date', 'time', 'status']

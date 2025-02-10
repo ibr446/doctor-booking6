@@ -1,15 +1,19 @@
+from datetime import timedelta
+
 from django.core.serializers import serialize
+from django.utils.timezone import now
 from rest_framework.views import APIView
 from rest_framework.generics import ListAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from .models import Doctor, News, User
+from .models import Doctor, News, User, Date
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.throttling import AnonRateThrottle
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from django.contrib.auth.hashers import check_password, make_password
-from .serializers import DoctorSerializer, NewsSerializer, RegisterSerializer, DoctorUpdateSerializer, LoginSerializer, UserUpdateSerializer
+from .serializers import (DoctorSerializer, NewsSerializer, RegisterSerializer,
+                          DoctorUpdateSerializer, LoginSerializer, UserUpdateSerializer, DoctorDateSerializer, BookingSerializer)
 from rest_framework import filters, generics
 from rest_framework.filters import SearchFilter
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -91,7 +95,8 @@ class UserUpdateView(APIView):
 
 
 class DoctorApiView(APIView):
-    throttle_classes = [AnonRateThrottle]
+    permission_classes = [IsAuthenticated]
+    throttle_classes = (AnonRateThrottle, UserRateThrottle)
 
     def get(self, requests, pk=None):
         if pk:
@@ -156,6 +161,29 @@ class NewsApiView(APIView):
             serializer = NewsSerializer(news, many=True)
             return Response(serializer.data)
 
+
+
+class DoctorDateAPIView(APIView):
+    def get(self, request):
+        date = Date.objects.all()
+        serializer = DoctorDateSerializer(date, many=True)
+        return Response(serializer.data)
+
+
+
+class BookingAPIView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        user = request.user
+        Date.objects.filter(pk=pk, status='pending').update(user=user, status='confirmed')
+        try:
+            date = Date.objects.get(pk=pk, status='confirmed')
+        except Date.DoesNotExist:
+            return Response({"error": "Date not found or not pending"}, status=404)
+
+        serializer = BookingSerializer(date)
+        return Response(serializer.data)
 
 
 
