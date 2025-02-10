@@ -1,5 +1,8 @@
 # Doctor Booking System
 
+<img width="427" alt="Снимок экрана 2025-02-10 213834" src="https://github.com/user-attachments/assets/055336ee-b287-4fc4-9e16-f99c654e9f3d" />
+
+
 ## Overview
 
 Doctor Booking System is a web-based platform designed to facilitate doctor appointments and scheduling. It provides an efficient way for patients to book appointments and for doctors to manage their schedules.
